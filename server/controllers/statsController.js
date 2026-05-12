@@ -133,3 +133,56 @@ export const recordActivity = async (req, res) => {
   }
 };
 
+export const getCategorizedUsage = async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const logs = await ProductivityLog.find({
+      userId: req.userId,
+      timestamp: { $gte: today }
+    });
+
+    const categories = {
+      'Productive': [],
+      'Social Media': [],
+      'Entertainment': [],
+      'Education': [],
+      'Other': []
+    };
+
+    logs.forEach(log => {
+      let catKey = 'Other';
+      const cat = log.category.toLowerCase();
+
+      if (cat === 'productive') catKey = 'Productive';
+      else if (cat === 'social' || cat === 'distracting') catKey = 'Social Media';
+      else if (cat === 'entertainment') catKey = 'Entertainment';
+      else if (cat === 'education') catKey = 'Education';
+
+      const existing = categories[catKey].find(item => item.name === log.website);
+      if (existing) {
+        existing.time += log.timeSpent;
+      } else {
+        categories[catKey].push({ 
+          name: log.website, 
+          time: log.timeSpent,
+          icon: getIconForSite(log.website) 
+        });
+      }
+    });
+
+    res.json({ success: true, categories });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getIconForSite = (url) => {
+  if (url.includes('github') || url.includes('vscode')) return '💻';
+  if (url.includes('youtube') || url.includes('netflix')) return '🎬';
+  if (url.includes('instagram') || url.includes('facebook')) return '📱';
+  if (url.includes('udemy') || url.includes('coursera')) return '🎓';
+  return '🌐';
+};
+
