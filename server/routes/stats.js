@@ -1,5 +1,5 @@
 import express from 'express';
-import { getStats, recordActivity, getCategorizedUsage } from '../controllers/statsController.js';
+import { getStats, recordActivity, getCategorizedUsage, getAnalyticsData } from '../controllers/statsController.js';
 
 const router = express.Router();
 
