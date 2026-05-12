@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">FocusVerse</string>
+    <string name="title_activity_main">FocusVerse</string>
+    <string name="package_name">com.focusverse.app</string>
+    <string name="custom_url_scheme">com.focusverse.app</string>
+</resources>
