@@ -43,6 +43,7 @@ export const leaderboardAPI = {
 export const statsAPI = {
   getStats: () => api.get('/stats'),
   getCategorizedUsage: () => api.get('/stats/categorized'),
+  getAnalyticsData: (period) => api.get(`/stats/analytics?period=${period}`),
   recordActivity: (data) => api.post('/stats/record', data),
 };
 

@@ -9,7 +9,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Leaderboard from './pages/Leaderboard';
-import Timer from './pages/Timer';
 import AppBlocker from './pages/AppBlocker';
 import AIInsights from './pages/AIInsights';
 import Categorization from './pages/Categorization';
@@ -48,16 +47,7 @@ function App() {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/timer"
-            element={
-              <ProtectedRoute>
-                <MainLayout>
-                  <Timer />
-                </MainLayout>
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/blocker"
             element={

@@ -11,7 +11,7 @@ const Sidebar = () => {
     { name: 'App Blocker', icon: '🚫', path: '/blocker' },
     { name: 'Categorization', icon: '📁', path: '/categorization' },
     { name: 'Friends', icon: '👥', path: '/friends' },
-    { name: 'Focus Timer', icon: '🍅', path: '/timer' },
+
     { name: 'Leaderboard', icon: '🏆', path: '/leaderboard' },
     { name: 'Streaks', icon: '🔥', path: '/streaks' },
     { name: 'Screen Time', icon: '📱', path: '/screen-time' },

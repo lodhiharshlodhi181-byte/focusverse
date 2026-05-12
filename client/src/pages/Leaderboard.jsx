@@ -65,15 +65,15 @@ const Leaderboard = () => {
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-3xl font-bold w-12 text-center">
-                      {getMedalEmoji(index + 1)}
+                      {getMedalEmoji(index + 1 + (page - 1) * 10)}
                     </div>
                     <div>
                       <p className="font-bold text-lg">{user.username}</p>
-                      <p className="text-sm text-gray-400">Lvl. {user.avatar.level}</p>
+                      <p className="text-sm text-gray-400">Lvl. {user.avatar?.level || 1}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-neon-cyan">{user.stats.totalXp}</p>
+                    <p className="text-2xl font-bold text-neon-cyan">{Math.floor(user.stats?.totalXp || 0)}</p>
                     <p className="text-sm text-gray-400">XP</p>
                   </div>
                 </motion.div>
@@ -90,11 +90,11 @@ const Leaderboard = () => {
                 ← Previous
               </button>
               <span className="flex items-center text-gray-400">
-                Page {pagination.page} of {pagination.pages}
+                Page {pagination?.page || 1} of {pagination?.pages || 1}
               </span>
               <button
                 onClick={() => setPage(page + 1)}
-                disabled={page === pagination.pages}
+                disabled={page >= (pagination?.pages || 1)}
                 className="px-6 py-2 bg-neon-purple rounded-lg disabled:opacity-50 font-semibold hover:bg-neon-pink transition-colors"
               >
                 Next →

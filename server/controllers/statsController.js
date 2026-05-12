@@ -44,92 +44,35 @@ export const recordActivity = async (req, res) => {
 
     await log.save();
 
-    // Update User Stats (Streaks and Challenges)
     const user = await User.findById(req.userId);
     if (user) {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
-      // 1. Weekly Challenge Logic
-      const lastReset = new Date(user.stats.weeklyChallenge.lastReset);
-      const daysSinceReset = (now - lastReset) / (1000 * 60 * 60 * 24);
-      
-      if (daysSinceReset >= 7) {
-        user.stats.weeklyChallenge.progress = 0;
-        user.stats.weeklyChallenge.lastReset = now;
-      }
-
       if (category === 'productive') {
-        // Update total focus and weekly progress
         const minutesSpent = timeSpent / 60;
         user.stats.totalFocus += minutesSpent;
-        user.stats.weeklyChallenge.progress += minutesSpent;
         user.stats.productiveHours += (timeSpent / 3600);
-        
-        // XP Reward: 5 XP per productive minute
         user.stats.totalXp += Math.floor(minutesSpent * 5);
 
-        // 2. Daily Streak Logic
         if (!user.stats.lastProductiveDate) {
           user.stats.currentStreak = 1;
-          user.stats.lastProductiveDate = now;
         } else {
           const lastDate = new Date(user.stats.lastProductiveDate);
-          const lastDay = new Date(lastDate.getFullYear(), lastDate.getMonth(), lastDate.getDate());
-          const diffDays = (today - lastDay) / (1000 * 60 * 60 * 24);
-
-          if (diffDays === 1) {
-            // Consecutive day
-            user.stats.currentStreak += 1;
-            user.stats.lastProductiveDate = now;
-          } else if (diffDays > 1) {
-            // Streak broken
-            user.stats.currentStreak = 1;
-            user.stats.lastProductiveDate = now;
-          } else if (diffDays === 0) {
-            // Already active today
-            user.stats.lastProductiveDate = now;
-          }
+          const diffDays = Math.floor((today - lastDate) / (1000 * 60 * 60 * 24));
+          if (diffDays === 1) user.stats.currentStreak += 1;
+          else if (diffDays > 1) user.stats.currentStreak = 1;
         }
-
-        if (user.stats.currentStreak > user.stats.longestStreak) {
-          user.stats.longestStreak = user.stats.currentStreak;
-        }
-
-        // 3. No-Scroll Challenge Logic
-        if (scrollSpeed !== undefined && scrollSpeed < 50) {
-           if (!user.stats.noScrollStreak) user.stats.noScrollStreak = 0;
-           user.stats.noScrollStreak += 0.5; // Gain more points for low scroll
-        } else if (scrollSpeed > 500) {
-          // Penalize for high scroll speed
-          user.stats.noScrollStreak = Math.max(0, user.stats.noScrollStreak - 2);
-        }
-      } else if (category === 'non-productive' || category === 'mindless-consumption') {
+        user.stats.lastProductiveDate = now;
+      } else {
         user.stats.nonProductiveHours += (timeSpent / 3600);
-        
-        // Penalize streaks if mindless consumption detected
-        if (category === 'mindless-consumption') {
-          user.stats.noScrollStreak = Math.max(0, user.stats.noScrollStreak - 5);
-          user.stats.totalXp = Math.max(0, user.stats.totalXp - 10);
-        }
       }
-
-      user.lastActive = now;
       await user.save();
     }
 
-    res.status(201).json({
-      success: true,
-      message: '✅ Activity recorded and stats updated',
-      log,
-      stats: user ? user.stats : null
-    });
+    res.status(201).json({ success: true, log });
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: '❌ Error recording activity',
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 };
 
@@ -137,52 +80,58 @@ export const getCategorizedUsage = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const logs = await ProductivityLog.find({ userId: req.userId, timestamp: { $gte: today } });
+    
+    const categories = { 'Productive': [], 'Social Media': [], 'Entertainment': [], 'Education': [], 'Other': [] };
+    logs.forEach(log => {
+      let key = 'Other';
+      const c = log.category.toLowerCase();
+      if (c === 'productive') key = 'Productive';
+      else if (c === 'social' || c === 'distracting') key = 'Social Media';
+      else if (c === 'entertainment') key = 'Entertainment';
+      else if (c === 'education') key = 'Education';
 
-    const logs = await ProductivityLog.find({
-      userId: req.userId,
-      timestamp: { $gte: today }
+      const existing = categories[key].find(i => i.name === log.website);
+      if (existing) existing.time += log.timeSpent;
+      else categories[key].push({ name: log.website, time: log.timeSpent, icon: getIconForSite(log.website) });
     });
+    res.json({ success: true, categories });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
+};
 
-    const categories = {
-      'Productive': [],
-      'Social Media': [],
-      'Entertainment': [],
-      'Education': [],
-      'Other': []
-    };
+export const getAnalyticsData = async (req, res) => {
+  try {
+    const { period } = req.query;
+    const days = period === 'monthly' ? 30 : 7;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const logs = await ProductivityLog.find({ userId: req.userId, timestamp: { $gte: startDate } });
+    const dailyData = {};
+    const breakdown = { productive: 0, social: 0, entertainment: 0, other: 0 };
 
     logs.forEach(log => {
-      let catKey = 'Other';
-      const cat = log.category.toLowerCase();
-
-      if (cat === 'productive') catKey = 'Productive';
-      else if (cat === 'social' || cat === 'distracting') catKey = 'Social Media';
-      else if (cat === 'entertainment') catKey = 'Entertainment';
-      else if (cat === 'education') catKey = 'Education';
-
-      const existing = categories[catKey].find(item => item.name === log.website);
-      if (existing) {
-        existing.time += log.timeSpent;
+      const date = log.timestamp.toISOString().split('T')[0];
+      if (!dailyData[date]) dailyData[date] = { productive: 0, distraction: 0 };
+      
+      const c = log.category.toLowerCase();
+      if (c === 'productive') {
+        dailyData[date].productive += log.timeSpent / 60;
+        breakdown.productive += log.timeSpent;
       } else {
-        categories[catKey].push({ 
-          name: log.website, 
-          time: log.timeSpent,
-          icon: getIconForSite(log.website) 
-        });
+        dailyData[date].distraction += log.timeSpent / 60;
+        if (c === 'social' || c === 'distracting') breakdown.social += log.timeSpent;
+        else if (c === 'entertainment') breakdown.entertainment += log.timeSpent;
+        else breakdown.other += log.timeSpent;
       }
     });
-
-    res.json({ success: true, categories });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+    res.json({ success: true, chartData: dailyData, breakdown });
+  } catch (err) { res.status(500).json({ success: false, error: err.message }); }
 };
 
 const getIconForSite = (url) => {
   if (url.includes('github') || url.includes('vscode')) return '💻';
   if (url.includes('youtube') || url.includes('netflix')) return '🎬';
   if (url.includes('instagram') || url.includes('facebook')) return '📱';
-  if (url.includes('udemy') || url.includes('coursera')) return '🎓';
   return '🌐';
 };
-

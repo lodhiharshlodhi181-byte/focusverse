@@ -67,10 +67,10 @@ const Dashboard = () => {
             className="lg:col-span-1 glass-effect rounded-xl p-6 neon-glow flex flex-col items-center justify-center"
           >
             <Avatar
-              productivity={user.stats.productivityScore || 0}
-              focusTime={user.stats.totalFocus || 0}
-              scrollAddiction={user.stats.scrollSpeed || 0}
-              level={user.avatar.level}
+              productivity={user.stats?.productivityScore || 0}
+              focusTime={user.stats?.totalFocus || 0}
+              scrollAddiction={user.stats?.scrollSpeed || 0}
+              level={user.avatar?.level || 1}
             />
           </motion.div>
 
@@ -83,56 +83,56 @@ const Dashboard = () => {
             {/* Total Focus Time */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-pink transition-all">
               <p className="text-gray-400 text-sm mb-2">⏱️ Total Focus</p>
-              <h3 className="text-3xl font-bold text-neon-cyan">{user.stats.totalFocus}</h3>
+              <h3 className="text-3xl font-bold text-neon-cyan">{user.stats?.totalFocus || 0}</h3>
               <p className="text-gray-400 text-sm mt-2">minutes</p>
             </div>
 
             {/* Current Streak */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-cyan transition-all">
               <p className="text-gray-400 text-sm mb-2">🔥 Current Streak</p>
-              <h3 className="text-3xl font-bold text-neon-pink">{user.stats.currentStreak}</h3>
+              <h3 className="text-3xl font-bold text-neon-pink">{user.stats?.currentStreak || 0}</h3>
               <p className="text-gray-400 text-sm mt-2">days</p>
             </div>
 
             {/* Total XP */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-cyan transition-all">
               <p className="text-gray-400 text-sm mb-2">⭐ Total XP</p>
-              <h3 className="text-3xl font-bold text-neon-green">{user.stats.totalXp}</h3>
+              <h3 className="text-3xl font-bold text-neon-green">{user.stats?.totalXp || 0}</h3>
               <p className="text-gray-400 text-sm mt-2">points</p>
             </div>
 
             {/* Longest Streak */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-pink transition-all">
               <p className="text-gray-400 text-sm mb-2">🏆 Longest Streak</p>
-              <h3 className="text-3xl font-bold text-neon-purple">{user.stats.longestStreak}</h3>
+              <h3 className="text-3xl font-bold text-neon-purple">{user.stats?.longestStreak || 0}</h3>
               <p className="text-gray-400 text-sm mt-2">days</p>
             </div>
 
             {/* Productive Hours */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-cyan transition-all">
               <p className="text-gray-400 text-sm mb-2">✅ Productive</p>
-              <h3 className="text-3xl font-bold text-neon-green">{Math.round(user.stats.productiveHours * 10) / 10}</h3>
+              <h3 className="text-3xl font-bold text-neon-green">{Math.round((user.stats?.productiveHours || 0) * 10) / 10}</h3>
               <p className="text-gray-400 text-sm mt-2">hours</p>
             </div>
 
             {/* Weekly Progress */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-pink transition-all">
               <p className="text-gray-400 text-sm mb-2">📅 Weekly Goal</p>
-              <h3 className="text-3xl font-bold text-neon-cyan">{Math.round(user.stats.weeklyChallenge?.progress || 0)}</h3>
-              <p className="text-gray-400 text-sm mt-2">/ {user.stats.weeklyChallenge?.goal || 1000} mins</p>
+              <h3 className="text-3xl font-bold text-neon-cyan">{Math.round(user.stats?.weeklyChallenge?.progress || 0)}</h3>
+              <p className="text-gray-400 text-sm mt-2">/ {user.stats?.weeklyChallenge?.goal || 1000} mins</p>
             </div>
 
             {/* No-Scroll Streak */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-cyan transition-all">
               <p className="text-gray-400 text-sm mb-2">🛡️ No-Scroll</p>
-              <h3 className="text-3xl font-bold text-neon-green">{Math.floor(user.stats.noScrollStreak || 0)}</h3>
+              <h3 className="text-3xl font-bold text-neon-green">{Math.floor(user.stats?.noScrollStreak || 0)}</h3>
               <p className="text-gray-400 text-sm mt-2">points</p>
             </div>
 
             {/* Non-Productive Hours */}
             <div className="glass-effect rounded-xl p-6 neon-glow hover:neon-glow-pink transition-all">
               <p className="text-gray-400 text-sm mb-2">❌ Non-Productive</p>
-              <h3 className="text-3xl font-bold text-neon-pink">{Math.round(user.stats.nonProductiveHours * 10) / 10}</h3>
+              <h3 className="text-3xl font-bold text-neon-pink">{Math.round((user.stats?.nonProductiveHours || 0) * 10) / 10}</h3>
               <p className="text-gray-400 text-sm mt-2">hours</p>
             </div>
           </motion.div>
@@ -147,12 +147,7 @@ const Dashboard = () => {
         >
           <h2 className="text-2xl font-bold mb-4">⚡ Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button 
-              onClick={() => navigate('/timer')}
-              className="bg-neon-purple/20 hover:bg-neon-purple/40 border border-neon-purple rounded-lg p-4 transition-all text-center font-semibold"
-            >
-              🍅 Pomodoro
-            </button>
+
             <button 
               onClick={() => navigate('/analytics')}
               className="bg-neon-cyan/20 hover:bg-neon-cyan/40 border border-neon-cyan rounded-lg p-4 transition-all text-center font-semibold"

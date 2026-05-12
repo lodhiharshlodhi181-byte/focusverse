@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { registerPlugin } from '@capacitor/core';
+import { registerPlugin, Capacitor } from '@capacitor/core';
 import { motion } from 'framer-motion';
-import { FiMonitor, FiShield, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiMonitor, FiShield, FiCheckCircle, FiAlertCircle, FiDownload } from 'react-icons/fi';
 
 const ScreenTimePlugin = registerPlugin('ScreenTime');
 
@@ -9,33 +9,44 @@ const ScreenTime = () => {
   const [hasPermission, setHasPermission] = useState(false);
   const [hasOverlayPermission, setHasOverlayPermission] = useState(false);
   const [loading, setLoading] = useState(true);
+  const isNative = Capacitor.isNativePlatform();
 
   const checkPermission = async () => {
+    if (!isNative) {
+      setLoading(false);
+      return;
+    }
     try {
       const { granted: usageGranted } = await ScreenTimePlugin.checkPermission();
       const { granted: overlayGranted } = await ScreenTimePlugin.checkOverlayPermission();
       setHasPermission(usageGranted);
       setHasOverlayPermission(overlayGranted);
     } catch (err) {
-      console.error('Error checking permission:', err);
+      console.warn('Native ScreenTimePlugin not found, expected in browser.');
     } finally {
       setLoading(false);
     }
   };
 
   const requestPermission = async () => {
+    if (!isNative) {
+      alert('This feature only works inside the FocusVerse Mobile App! Please download the APK.');
+      return;
+    }
     try {
       await ScreenTimePlugin.requestPermission();
-      alert('Please enable Usage Access for FocusVerse.');
     } catch (err) {
       console.error('Error requesting permission:', err);
     }
   };
 
   const requestOverlayPermission = async () => {
+    if (!isNative) {
+      alert('Display over other apps can only be enabled on a mobile device.');
+      return;
+    }
     try {
       await ScreenTimePlugin.requestOverlayPermission();
-      alert('Please enable "Display over other apps" for FocusVerse.');
     } catch (err) {
       console.error('Error requesting overlay permission:', err);
     }
@@ -87,7 +98,20 @@ const ScreenTime = () => {
       </div>
 
       <div className="glass-effect rounded-3xl p-8 border border-white/10 text-center">
-        {hasPermission && hasOverlayPermission ? (
+        {!isNative ? (
+          <div className="space-y-4">
+            <div className="text-amber-500 font-bold flex items-center justify-center gap-2">
+              <FiAlertCircle /> Running in Browser Mode
+            </div>
+            <p className="text-sm text-gray-400">
+              Mobile tracking can only be enabled inside our <strong>Android App</strong>. 
+              Please install the FocusVerse APK to activate these features.
+            </p>
+            <button className="flex items-center gap-2 mx-auto px-6 py-2 bg-white/10 hover:bg-white/20 rounded-full text-xs font-bold transition-all border border-white/10">
+              <FiDownload /> Download Mobile App
+            </button>
+          </div>
+        ) : hasPermission && hasOverlayPermission ? (
           <div className="text-emerald-500 font-bold flex items-center justify-center gap-2">
             <FiCheckCircle /> Mobile Shield is fully active!
           </div>
